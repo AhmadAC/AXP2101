@@ -14,8 +14,8 @@
 // Corrected I2C Pins based on the Waveshare Schematic
 #define I2C_MASTER_NUM (i2c_port_num_t) 0
 #define I2C_MASTER_FREQ_HZ 400000
-#define I2C_MASTER_SDA_IO (gpio_num_t) 6   // GPIO 6 is SDA
-#define I2C_MASTER_SCL_IO (gpio_num_t) 5   // GPIO 5 is SCL
+#define I2C_MASTER_SDA_IO (gpio_num_t) 7   // GPIO 7 is actually SDA
+#define I2C_MASTER_SCL_IO (gpio_num_t) 8   // GPIO 8 is actually SCL
 #define I2C_MASTER_TIMEOUT_MS 1000
 
 static i2c_master_bus_handle_t i2c_bus_handle = NULL;
@@ -55,7 +55,7 @@ esp_err_t i2c_init() {
 int pmu_register_read(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len) {
     esp_err_t ret = i2c_master_transmit_receive(pmu_dev_handle, &regAddr, 1, data, len, I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "PMU READ FAILED!");
+        ESP_LOGE(TAG, "PMU READ FAILED! Error code: 0x%X", ret);
         return -1;
     }
     return 0;
@@ -72,7 +72,7 @@ int pmu_register_write_byte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uin
     free(buffer);
 
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "PMU WRITE FAILED!");
+        ESP_LOGE(TAG, "PMU WRITE FAILED! Error code: 0x%X", ret);
         return -1;
     }
     return 0;
