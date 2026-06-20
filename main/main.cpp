@@ -23,19 +23,10 @@
 
 static i2c_master_bus_handle_t i2c_bus_handle = NULL;
 static i2c_master_dev_handle_t pmu_dev_handle = NULL;
-// static QueueHandle_t gpio_evt_queue = NULL;
 
 // Function declarations
 extern esp_err_t pmu_init();
 extern void pmu_isr_handler();
-
-// ISR for GPIO (commented out to prevent unused function warning)
-/*
-static void IRAM_ATTR pmu_irq_handler(void *arg) {
-    uint32_t gpio_num = (uint32_t)arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
-}
-*/
 
 // I2C init with new API
 esp_err_t i2c_init() {
@@ -48,7 +39,7 @@ esp_err_t i2c_init() {
     bus_config.glitch_ignore_cnt = 7;
     bus_config.intr_priority = 0;
     bus_config.trans_queue_depth = 0;
-    bus_config.flags.enable_internal_pullup = true;
+    bus_config.flags.enable_internal_pullup = 1;
 
     i2c_new_master_bus(&bus_config, &i2c_bus_handle);
 
@@ -57,7 +48,7 @@ esp_err_t i2c_init() {
     dev_config.dev_addr_length = I2C_ADDR_BIT_LEN_7;
     dev_config.device_address = 0x34;
     dev_config.scl_speed_hz = I2C_MASTER_FREQ_HZ;
-    dev_config.flags.disable_ack_check = 0;
+    // Removed dev_config.flags.disable_ack_check - not present in ESP-IDF v5.2
 
     i2c_master_bus_add_device(i2c_bus_handle, &dev_config, &pmu_dev_handle);
 
@@ -100,9 +91,6 @@ static void pmu_hander_task(void *args) {
 }
 
 extern "C" void app_main(void) {
-    // gpio_evt_queue = xQueueCreate(5, sizeof(uint32_t));
-    // irq_init();
-
     ESP_ERROR_CHECK(i2c_init());
     ESP_LOGI(TAG, "I2C initialized successfully");
 
