@@ -21,10 +21,10 @@ jobs:
       - name: Build with ESP-IDF
         uses: espressif/esp-idf-ci-action@v1
         with:
-          esp_idf_version: v5.1
+          # Changed from v5.1 to v5.2 to support the new driver/i2c_master.h API
+          esp_idf_version: v5.2
           target: esp32s3
           path: '.'
-          # Removed the broken command line. It will default to "idf.py build"
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
