@@ -7,14 +7,15 @@
 #include "esp_err.h"
 #include "driver/gpio.h"
 #include "driver/i2c_master.h"
+#include "sdkconfig.h"
 
 #define TAG "main"
 
-// Hardcoded for Waveshare ESP32-S3-Touch-AMOLED-2.06
+// Corrected I2C Pins based on the Waveshare Schematic
 #define I2C_MASTER_NUM (i2c_port_num_t) 0
 #define I2C_MASTER_FREQ_HZ 400000
-#define I2C_MASTER_SDA_IO (gpio_num_t) 8
-#define I2C_MASTER_SCL_IO (gpio_num_t) 7
+#define I2C_MASTER_SDA_IO (gpio_num_t) 6   // GPIO 6 is SDA
+#define I2C_MASTER_SCL_IO (gpio_num_t) 5   // GPIO 5 is SCL
 #define I2C_MASTER_TIMEOUT_MS 1000
 
 static i2c_master_bus_handle_t i2c_bus_handle = NULL;
@@ -26,6 +27,7 @@ extern void pmu_isr_handler();
 
 // I2C init with new API
 esp_err_t i2c_init() {
+    // Zero-initialize the structure first to prevent C++ missing-field-initializer warnings
     i2c_master_bus_config_t bus_config = {};
     bus_config.i2c_port = I2C_MASTER_NUM;
     bus_config.sda_io_num = I2C_MASTER_SDA_IO;
@@ -38,6 +40,7 @@ esp_err_t i2c_init() {
 
     i2c_new_master_bus(&bus_config, &i2c_bus_handle);
 
+    // Zero-initialize device config
     i2c_device_config_t dev_config = {};
     dev_config.dev_addr_length = I2C_ADDR_BIT_LEN_7;
     dev_config.device_address = 0x34; // AXP2101 Address
