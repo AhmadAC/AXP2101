@@ -11,11 +11,11 @@
 
 #define TAG "main"
 
-// Corrected I2C Pins based on the Waveshare Schematic logic
+// Definitive I2C Pins for Waveshare ESP32-S3-Touch-AMOLED-2.06
 #define I2C_MASTER_NUM (i2c_port_num_t) 0
-#define I2C_MASTER_FREQ_HZ 400000
-#define I2C_MASTER_SDA_IO (gpio_num_t) 6   // GPIO 6 is SDA
-#define I2C_MASTER_SCL_IO (gpio_num_t) 7   // GPIO 7 is SCL
+#define I2C_MASTER_FREQ_HZ 100000  // 100kHz for stability on the shared bus
+#define I2C_MASTER_SDA_IO (gpio_num_t) 15
+#define I2C_MASTER_SCL_IO (gpio_num_t) 14
 #define I2C_MASTER_TIMEOUT_MS 1000
 
 static i2c_master_bus_handle_t i2c_bus_handle = NULL;
@@ -27,7 +27,6 @@ extern void pmu_isr_handler();
 
 // I2C init with new API
 esp_err_t i2c_init() {
-    // Zero-initialize the structure first to prevent C++ missing-field-initializer warnings
     i2c_master_bus_config_t bus_config = {};
     bus_config.i2c_port = I2C_MASTER_NUM;
     bus_config.sda_io_num = I2C_MASTER_SDA_IO;
@@ -41,7 +40,6 @@ esp_err_t i2c_init() {
     esp_err_t err = i2c_new_master_bus(&bus_config, &i2c_bus_handle);
     if (err != ESP_OK) return err;
 
-    // Zero-initialize device config
     i2c_device_config_t dev_config = {};
     dev_config.dev_addr_length = I2C_ADDR_BIT_LEN_7;
     dev_config.device_address = 0x34; // AXP2101 Address
@@ -54,7 +52,7 @@ esp_err_t i2c_init() {
 int pmu_register_read(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint8_t len) {
     esp_err_t ret = i2c_master_transmit_receive(pmu_dev_handle, &regAddr, 1, data, len, I2C_MASTER_TIMEOUT_MS);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "PMU READ FAILED! Reg: 0x%02X, Error: 0x%X", regAddr, ret);
+        ESP_LOGE(TAG, "PMU READ FAILED! Reg: 0x%02X, Error: %s", regAddr, esp_err_to_name(ret));
         return -1;
     }
     return 0;
@@ -71,7 +69,7 @@ int pmu_register_write_byte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uin
     free(buffer);
 
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "PMU WRITE FAILED! Reg: 0x%02X, Error: 0x%X", regAddr, ret);
+        ESP_LOGE(TAG, "PMU WRITE FAILED! Reg: 0x%02X, Error: %s", regAddr, esp_err_to_name(ret));
         return -1;
     }
     return 0;
@@ -97,7 +95,7 @@ extern "C" void app_main(void) {
     err = pmu_init();
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "AXP2101 PMU initialization failed! Halting.");
-        // Halt here so we can read the exact I2C error codes from the logs without bootlooping
+        // Halt here to prevent bootloop so you can read the log output
         while (1) {
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
